@@ -20,6 +20,18 @@ impl HttpMethod {
     }
 }
 
+impl HttpMethod {
+    pub fn from_str(s: &str) -> Option<Self> {
+        match s {
+            "GET" => Some(Self::GET),
+            "POST" => Some(Self::POST),
+            "PUT" => Some(Self::PUT),
+            "DELETE" => Some(Self::DELETE),
+            _ => None,
+        }
+    }
+}
+
 impl std::fmt::Display for HttpMethod {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.as_str())
@@ -166,6 +178,16 @@ mod tests {
         assert_eq!(cfg.concurrency_at_stage(1), 40);
         assert_eq!(cfg.concurrency_at_stage(2), 70);
         assert_eq!(cfg.concurrency_at_stage(3), 100);
+    }
+
+    #[test]
+    fn test_http_method_from_str() {
+        assert_eq!(HttpMethod::from_str("GET"), Some(HttpMethod::GET));
+        assert_eq!(HttpMethod::from_str("POST"), Some(HttpMethod::POST));
+        assert_eq!(HttpMethod::from_str("PUT"), Some(HttpMethod::PUT));
+        assert_eq!(HttpMethod::from_str("DELETE"), Some(HttpMethod::DELETE));
+        assert_eq!(HttpMethod::from_str("PATCH"), None);
+        assert_eq!(HttpMethod::from_str(""), None);
     }
 
     #[test]

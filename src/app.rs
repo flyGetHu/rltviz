@@ -7,6 +7,9 @@ pub struct RltvizApp {
     pub config: AppConfig,
     pub controller: TestController,
     handle: tokio::runtime::Handle,
+    curl_import_open: bool,
+    curl_import_text: String,
+    curl_import_error: Option<String>,
 }
 
 impl RltvizApp {
@@ -16,6 +19,9 @@ impl RltvizApp {
             config: AppConfig::default(),
             controller: TestController::new(),
             handle,
+            curl_import_open: false,
+            curl_import_text: String::new(),
+            curl_import_error: None,
         }
     }
 }
@@ -34,7 +40,14 @@ impl eframe::App for RltvizApp {
             .min_width(300.0)
             .show(ctx, |ui| {
                 let running = state == TestState::Running || state == TestState::Paused;
-                config_panel::show(ui, &mut self.config, running);
+                config_panel::show(
+                    ui,
+                    &mut self.config,
+                    running,
+                    &mut self.curl_import_open,
+                    &mut self.curl_import_text,
+                    &mut self.curl_import_error,
+                );
                 ui.separator();
                 control_bar::show(ui, &state, &mut self.controller, &self.config, &self.handle);
             });
