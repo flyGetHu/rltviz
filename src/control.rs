@@ -44,6 +44,7 @@ impl TestController {
         let (cancel_tx, cancel_rx) = watch::channel(false);
         let (result_tx, mut result_rx) = mpsc::unbounded_channel::<IterResult>();
         self.pause_tx = pause_tx;
+        let cancel_tx_for_ramp = cancel_tx.clone();
         self.cancel_tx = cancel_tx;
         let (mut collector, snapshot_arc) = MetricsCollector::new();
         self.snapshot = snapshot_arc.clone();
@@ -80,6 +81,14 @@ impl TestController {
                     _ = tokio::time::sleep(step_duration) => {
                         semaphore.add_permits(step_size);
                     }
+                }
+            }
+            // Wait for final stage to complete, then auto-stop
+            let mut cancel_rx = cancel_rx_clone;
+            tokio::select! {
+                _ = cancel_rx.changed() => {}
+                _ = tokio::time::sleep(step_duration) => {
+                    let _ = cancel_tx_for_ramp.send(true);
                 }
             }
         });
