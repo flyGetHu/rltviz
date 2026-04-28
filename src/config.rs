@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[allow(clippy::upper_case_acronyms)]
 pub enum HttpMethod {
     GET,
     POST,
@@ -87,19 +88,10 @@ impl RampUpConfig {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
 pub struct AppConfig {
     pub http: HttpConfig,
     pub ramp_up: RampUpConfig,
-}
-
-impl Default for AppConfig {
-    fn default() -> Self {
-        Self {
-            http: HttpConfig::default(),
-            ramp_up: RampUpConfig::default(),
-        }
-    }
 }
 
 #[cfg(test)]

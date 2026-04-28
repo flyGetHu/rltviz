@@ -98,7 +98,7 @@ impl MetricsCollector {
         snapshot.step_progress = step_progress;
     }
 
-    fn compute_percentiles(samples: &mut Vec<Duration>) -> (Duration, Duration, Duration) {
+    fn compute_percentiles(samples: &mut [Duration]) -> (Duration, Duration, Duration) {
         if samples.is_empty() {
             return (Duration::ZERO, Duration::ZERO, Duration::ZERO);
         }

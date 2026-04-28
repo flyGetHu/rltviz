@@ -117,9 +117,9 @@ pub fn show(ui: &mut egui::Ui, config: &mut AppConfig, running: bool) {
             let y = rect.bottom() - 16.0 - h;
 
             let color = egui::Color32::from_rgb(
-                (50 + (205.0 * fraction) as u8).min(255),
-                (180 - (100.0 * fraction) as u8).max(50),
-                (100 + (50.0 * fraction) as u8).min(180),
+                50 + (205.0 * fraction) as u8,
+                180 - (100.0 * fraction) as u8,
+                100 + (50.0 * fraction) as u8,
             );
 
             painter.rect_filled(

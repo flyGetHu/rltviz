@@ -6,6 +6,7 @@ use tokio::sync::{mpsc, Semaphore, watch};
 pub struct IterResult {
     pub duration: Duration,
     pub status_code: u16,
+    #[allow(dead_code)]
     pub bytes: u64,
     pub is_error: bool,
 }
@@ -40,6 +41,7 @@ impl HttpWorkerPool {
         self.semaphore.clone()
     }
 
+    #[allow(dead_code)]
     pub fn add_permits(&self, n: usize) {
         self.semaphore.add_permits(n);
     }
