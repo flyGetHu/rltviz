@@ -36,6 +36,10 @@ impl HttpWorkerPool {
         }
     }
 
+    pub fn semaphore(&self) -> Arc<Semaphore> {
+        self.semaphore.clone()
+    }
+
     pub fn add_permits(&self, n: usize) {
         self.semaphore.add_permits(n);
     }
