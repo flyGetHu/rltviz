@@ -25,7 +25,7 @@ impl std::fmt::Display for HttpMethod {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct HttpConfig {
     pub url: String,
     pub method: HttpMethod,
@@ -44,7 +44,7 @@ impl Default for HttpConfig {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct RampUpConfig {
     pub start_concurrency: u32,
     pub end_concurrency: u32,
@@ -87,7 +87,7 @@ impl RampUpConfig {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct AppConfig {
     pub http: HttpConfig,
     pub ramp_up: RampUpConfig,
@@ -157,6 +157,23 @@ mod tests {
     fn test_http_method_display() {
         assert_eq!(HttpMethod::GET.to_string(), "GET");
         assert_eq!(HttpMethod::POST.to_string(), "POST");
+        assert_eq!(HttpMethod::PUT.to_string(), "PUT");
+        assert_eq!(HttpMethod::DELETE.to_string(), "DELETE");
+    }
+
+    #[test]
+    fn test_rampup_step_size_normal() {
+        let cfg = RampUpConfig {
+            start_concurrency: 10,
+            end_concurrency: 100,
+            steps: 3,
+            step_duration_secs: 30,
+        };
+        assert_eq!(cfg.concurrency_step_size(), 30); // (100-10)/3 = 30
+        assert_eq!(cfg.concurrency_at_stage(0), 10);
+        assert_eq!(cfg.concurrency_at_stage(1), 40);
+        assert_eq!(cfg.concurrency_at_stage(2), 70);
+        assert_eq!(cfg.concurrency_at_stage(3), 100);
     }
 
     #[test]
