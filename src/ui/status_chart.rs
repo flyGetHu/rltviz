@@ -46,7 +46,7 @@ pub fn show(ui: &mut egui::Ui, snapshot: &MetricsSnapshot) {
         if bar_w > 0.0 {
             painter.rect_filled(
                 egui::Rect::from_min_size(egui::pos2(rect.left() + 55.0, y + 2.0), egui::vec2(bar_w, bar_height - 4.0)),
-                egui::Rounding::same(3),
+                egui::CornerRadius::same(3),
                 color,
             );
         }

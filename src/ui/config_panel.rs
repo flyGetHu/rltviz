@@ -4,7 +4,7 @@ pub fn show(ui: &mut egui::Ui, config: &mut AppConfig, running: bool) {
     ui.heading("压测配置");
     ui.add_space(8.0);
 
-    ui.set_enabled(!running);
+    ui.add_enabled_ui(!running, |ui| {
 
     // URL
     ui.label("目标 URL");
@@ -124,7 +124,7 @@ pub fn show(ui: &mut egui::Ui, config: &mut AppConfig, running: bool) {
 
             painter.rect_filled(
                 egui::Rect::from_min_size(egui::pos2(x, y), egui::vec2(bar_width, h)),
-                egui::Rounding::same(2),
+                egui::CornerRadius::same(2),
                 color,
             );
 
@@ -140,5 +140,5 @@ pub fn show(ui: &mut egui::Ui, config: &mut AppConfig, running: bool) {
         }
     }
 
-    ui.set_enabled(true);
+    });
 }

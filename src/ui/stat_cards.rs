@@ -29,9 +29,9 @@ pub fn show(ui: &mut egui::Ui, snapshot: &MetricsSnapshot) {
 }
 
 fn stat_card(ui: &mut egui::Ui, label: &str, value: &str, color: egui::Color32) {
-    let frame = egui::Frame::none()
+    let frame = egui::Frame::NONE
         .fill(egui::Color32::from_rgb(250, 250, 250))
-        .rounding(egui::Rounding::same(6))
+        .corner_radius(egui::CornerRadius::same(6))
         .inner_margin(egui::Margin::symmetric(12, 8));
 
     frame.show(ui, |ui| {

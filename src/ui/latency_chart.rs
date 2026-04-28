@@ -34,7 +34,7 @@ pub fn show(ui: &mut egui::Ui, snapshot: &MetricsSnapshot) {
 
         painter.rect_filled(
             egui::Rect::from_min_size(egui::pos2(x, y), egui::vec2(bar_width, h)),
-            egui::Rounding::same(4),
+            egui::CornerRadius::same(4),
             *color,
         );
 
