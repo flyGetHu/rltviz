@@ -206,7 +206,8 @@ pub fn show(
             if trimmed.is_empty() {
                 *curl_import_error = Some("cURL 命令为空".to_string());
             } else {
-                match ParsedRequest::from_str(trimmed) {
+                let normalized = normalize_curl(trimmed);
+                match ParsedRequest::from_str(&normalized) {
                     Ok(parsed) => {
                         if let Err(msg) = populate_config(config, &parsed) {
                             *curl_import_error = Some(msg);
@@ -226,6 +227,64 @@ pub fn show(
             *curl_import_open = false;
         }
     }
+}
+
+/// Normalize a curl command for the parser: strip line continuations,
+/// convert long-form flags (--request, --url, --header, --data) to short form.
+fn normalize_curl(cmd: &str) -> String {
+    // Remove backslash line continuations and trailing spaces
+    let joined = cmd
+        .lines()
+        .map(|l| l.strip_suffix('\\').unwrap_or(l).trim_end())
+        .collect::<Vec<_>>()
+        .join(" ");
+
+    // Normalize token by token
+    let tokens: Vec<&str> = joined.split_whitespace().collect();
+    let mut out = Vec::with_capacity(tokens.len());
+    let mut i = 0;
+    while i < tokens.len() {
+        let t = tokens[i];
+        match t {
+            "--request" | "-X" => {
+                out.push("-X".to_string());
+                if let Some(&val) = tokens.get(i + 1) {
+                    out.push(val.to_string());
+                    i += 2;
+                    continue;
+                }
+            }
+            "--url" => {
+                // --url VALUE → just emit VALUE as positional arg
+                if let Some(&val) = tokens.get(i + 1) {
+                    out.push(val.to_string());
+                    i += 2;
+                    continue;
+                }
+            }
+            "--header" => {
+                out.push("-H".to_string());
+                if let Some(&val) = tokens.get(i + 1) {
+                    out.push(val.to_string());
+                    i += 2;
+                    continue;
+                }
+            }
+            "--data" | "--data-raw" | "--data-binary" => {
+                out.push("-d".to_string());
+                if let Some(&val) = tokens.get(i + 1) {
+                    out.push(val.to_string());
+                    i += 2;
+                    continue;
+                }
+            }
+            _ => {
+                out.push(t.to_string());
+            }
+        }
+        i += 1;
+    }
+    out.join(" ")
 }
 
 fn populate_config(config: &mut AppConfig, parsed: &ParsedRequest) -> Result<(), String> {
