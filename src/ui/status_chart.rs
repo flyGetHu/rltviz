@@ -12,19 +12,24 @@ pub fn show(ui: &mut egui::Ui, snapshot: &MetricsSnapshot) {
     codes.sort_by_key(|(k, _)| *k);
 
     let total: u64 = codes.iter().map(|(_, v)| v).sum();
-    let available_width = ui.available_width();
+    let right_margin = 100.0;
     let bar_height = 24.0;
     let gap = 4.0;
 
     let (response, painter) = ui.allocate_painter(
-        egui::vec2(available_width, codes.len() as f32 * (bar_height + gap) + 10.0),
+        egui::vec2(ui.available_width(), codes.len() as f32 * (bar_height + gap) + 10.0),
         egui::Sense::hover(),
     );
     let rect = response.rect;
+    let max_bar_w = (rect.width() - right_margin - 55.0).max(50.0);
+
+    let label_x = rect.left();
+    let bar_start_x = rect.left() + 55.0;
+    let text_x = rect.right() - right_margin;
 
     for (i, (code, count)) in codes.iter().enumerate() {
         let fraction = if total > 0 { *count as f32 / total as f32 } else { 0.0 };
-        let bar_w = fraction * (available_width - 80.0);
+        let bar_w = fraction * max_bar_w;
         let y = rect.top() + i as f32 * (bar_height + gap);
 
         let color = match code / 100 {
@@ -36,7 +41,7 @@ pub fn show(ui: &mut egui::Ui, snapshot: &MetricsSnapshot) {
         };
 
         painter.text(
-            egui::pos2(rect.left(), y + bar_height / 2.0),
+            egui::pos2(label_x, y + bar_height / 2.0),
             egui::Align2::LEFT_CENTER,
             format!("{}", code),
             egui::FontId::new(12.0, egui::FontFamily::Proportional),
@@ -45,15 +50,18 @@ pub fn show(ui: &mut egui::Ui, snapshot: &MetricsSnapshot) {
 
         if bar_w > 0.0 {
             painter.rect_filled(
-                egui::Rect::from_min_size(egui::pos2(rect.left() + 55.0, y + 2.0), egui::vec2(bar_w, bar_height - 4.0)),
+                egui::Rect::from_min_size(
+                    egui::pos2(bar_start_x, y + 2.0),
+                    egui::vec2(bar_w, bar_height - 4.0),
+                ),
                 egui::CornerRadius::same(3),
                 color,
             );
         }
 
         painter.text(
-            egui::pos2(rect.left() + 55.0 + bar_w + 4.0, y + bar_height / 2.0),
-            egui::Align2::LEFT_CENTER,
+            egui::pos2(text_x, y + bar_height / 2.0),
+            egui::Align2::RIGHT_CENTER,
             format!("{} ({:.1}%)", count, fraction * 100.0),
             egui::FontId::new(11.0, egui::FontFamily::Proportional),
             egui::Color32::GRAY,

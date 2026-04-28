@@ -19,6 +19,7 @@ pub struct TestController {
     pub snapshot: Arc<RwLock<MetricsSnapshot>>,
     pause_tx: watch::Sender<bool>,
     cancel_tx: watch::Sender<bool>,
+    done_rx: watch::Receiver<bool>,
     start_time: Option<Instant>,
 }
 
@@ -26,12 +27,20 @@ impl TestController {
     pub fn new() -> Self {
         let (pause_tx, _) = watch::channel(false);
         let (cancel_tx, _) = watch::channel(false);
+        let (_, done_rx) = watch::channel(false);
         Self {
             state: TestState::Idle,
             snapshot: Arc::new(RwLock::new(MetricsSnapshot::default())),
             pause_tx,
             cancel_tx,
+            done_rx,
             start_time: None,
+        }
+    }
+
+    pub fn check_done(&mut self) {
+        if self.state == TestState::Running && *self.done_rx.borrow() {
+            self.state = TestState::Stopped;
         }
     }
 
@@ -42,8 +51,10 @@ impl TestController {
         // Create new channels for this run
         let (pause_tx, pause_rx) = watch::channel(false);
         let (cancel_tx, cancel_rx) = watch::channel(false);
+        let (done_tx, done_rx) = watch::channel(false);
         let (result_tx, mut result_rx) = mpsc::unbounded_channel::<IterResult>();
         self.pause_tx = pause_tx;
+        self.done_rx = done_rx;
         let cancel_tx_for_ramp = cancel_tx.clone();
         self.cancel_tx = cancel_tx;
         let (mut collector, snapshot_arc) = MetricsCollector::new();
@@ -88,6 +99,7 @@ impl TestController {
             tokio::select! {
                 _ = cancel_rx.changed() => {}
                 _ = tokio::time::sleep(step_duration) => {
+                    let _ = done_tx.send(true);
                     let _ = cancel_tx_for_ramp.send(true);
                 }
             }

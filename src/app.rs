@@ -22,6 +22,9 @@ impl RltvizApp {
 
 impl eframe::App for RltvizApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        // Check if auto-stop completed
+        self.controller.check_done();
+
         let state = self.controller.state.clone();
         let snapshot = self.controller.snapshot.read().clone();
 
