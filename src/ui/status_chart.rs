@@ -64,7 +64,7 @@ pub fn show(ui: &mut egui::Ui, snapshot: &MetricsSnapshot) {
             egui::Align2::RIGHT_CENTER,
             format!("{} ({:.1}%)", count, fraction * 100.0),
             egui::FontId::new(11.0, egui::FontFamily::Proportional),
-            egui::Color32::GRAY,
+            egui::Color32::from_rgb(66, 66, 66),
         );
     }
 }
