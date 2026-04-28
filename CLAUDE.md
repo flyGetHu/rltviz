@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 cargo build               # debug build
 cargo build --release     # release build (with embedded fonts)
 cargo run --release       # run the GUI application
-cargo test                # all tests (14 total)
+cargo test                # all tests (15 total)
 cargo test <module>       # e.g., cargo test config, cargo test engine
 cargo test <test_name>    # single test (e.g., cargo test test_percentiles)
 cargo clippy -- -D warnings  # lint with no warnings allowed
@@ -72,3 +72,10 @@ Idle ──start()──► Running ──pause()──► Paused ──resume()
 - **Per-run fresh channels**: Each `start()` creates new watch/mpsc channels (clean state)
 - **add_enabled_ui**: UI uses `ui.add_enabled_ui(!running, |ui| ...)` for disabled-state gating
 - **egui 0.31 API**: `CornerRadius::same(N)`, `Frame::NONE`, no `Rounding`/`set_enabled`
+
+## Gotchas
+
+- **egui Window popup**: `Window::open(&mut bool)` borrows the bool — mutation must go through `Cell<bool>` from outside the closure
+- **curl-parser crate**: Only supports short-form flags (`-X`, `-H`, `-d`). Long-form `--request`/`--url`/`--header`/`--data` must be preprocessed via `normalize_curl()`
+- **FontData**: `FontData::from_owned(Vec<u8>)` returns `FontData`, must be wrapped in `Arc` for the `font_data` map
+- **Flaky test**: `engine::tests::test_execute_request_404` hits httpbin.org — may fail transiently due to DNS/network
