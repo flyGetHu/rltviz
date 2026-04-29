@@ -1,5 +1,7 @@
+use crate::app::PanelTab;
 use crate::config::{AppConfig, HttpMethod};
-use crate::theme::{self, ACCENT, NEGATIVE};
+use crate::history::HistoryRecord;
+use crate::theme::{self, ACCENT, NEGATIVE, POSITIVE, WARNING};
 use curl_parser::ParsedRequest;
 use std::str::FromStr;
 
@@ -10,8 +12,26 @@ pub fn show(
     curl_import_open: &mut bool,
     curl_import_text: &mut String,
     curl_import_error: &mut Option<String>,
+    active_tab: &mut PanelTab,
+    history_records: &[HistoryRecord],
+    selected_history: &mut Option<usize>,
 ) {
     ui.add_space(8.0);
+
+    // ── Tab bar ──
+    ui.horizontal(|ui| {
+        ui.selectable_value(active_tab, PanelTab::Config, "Config");
+        ui.selectable_value(active_tab, PanelTab::History, "History");
+    });
+    ui.add_space(8.0);
+
+    match active_tab {
+        PanelTab::History => {
+            show_history_tab(ui, history_records, selected_history);
+            return;
+        }
+        PanelTab::Config => {}
+    }
 
     ui.add_enabled_ui(!running, |ui| {
         // Import curl button — secondary (text-only) style
@@ -304,6 +324,109 @@ pub fn show(
         if !open {
             *curl_import_open = false;
         }
+    }
+}
+
+fn show_history_tab(
+    ui: &mut egui::Ui,
+    records: &[HistoryRecord],
+    selected: &mut Option<usize>,
+) {
+    if records.is_empty() {
+        ui.add_space(60.0);
+        ui.vertical_centered(|ui| {
+            ui.label(
+                egui::RichText::new("暂无历史记录")
+                    .size(15.0)
+                    .color(theme::TEXT_TERTIARY),
+            );
+        });
+        return;
+    }
+
+    egui::ScrollArea::vertical()
+        .max_height(f32::INFINITY)
+        .show(ui, |ui| {
+            for (i, record) in records.iter().enumerate() {
+                let is_selected = *selected == Some(i);
+                let frame = if is_selected {
+                    egui::Frame::NONE
+                        .inner_margin(egui::Margin::same(8))
+                        .stroke(egui::Stroke::new(2.0, ACCENT))
+                        .outer_margin(egui::Margin::symmetric(0, 2))
+                } else {
+                    egui::Frame::NONE
+                        .inner_margin(egui::Margin::same(8))
+                        .outer_margin(egui::Margin::symmetric(0, 2))
+                };
+
+                let response = frame.show(ui, |ui| {
+                    ui.set_min_width(ui.available_width());
+
+                    ui.horizontal(|ui| {
+                        let method_color = match record.config.http.method {
+                            HttpMethod::GET => ACCENT,
+                            HttpMethod::POST => WARNING,
+                            HttpMethod::PUT => POSITIVE,
+                            HttpMethod::DELETE => NEGATIVE,
+                        };
+                        ui.label(
+                            egui::RichText::new(record.config.http.method.as_str())
+                                .size(12.0)
+                                .color(method_color)
+                                .strong(),
+                        );
+                        ui.with_layout(
+                            egui::Layout::right_to_left(egui::Align::Center),
+                            |ui| {
+                                ui.label(theme::body_small(&record.timestamp));
+                            },
+                        );
+                    });
+
+                    ui.label(
+                        egui::RichText::new(truncate_url(&record.config.http.url, 40))
+                            .size(11.0)
+                            .color(theme::TEXT_SECONDARY),
+                    );
+
+                    ui.horizontal(|ui| {
+                        ui.label(
+                            egui::RichText::new(format!("QPS: {:.0}", record.summary.qps))
+                                .size(10.0)
+                                .color(theme::TEXT_TERTIARY),
+                        );
+                        ui.label(
+                            egui::RichText::new(format!(
+                                "P99: {:.0}ms",
+                                record.summary.p99_ms
+                            ))
+                            .size(10.0)
+                            .color(theme::TEXT_TERTIARY),
+                        );
+                        ui.label(
+                            egui::RichText::new(format!(
+                                "Err: {:.1}%",
+                                record.summary.error_rate * 100.0
+                            ))
+                            .size(10.0)
+                            .color(theme::TEXT_TERTIARY),
+                        );
+                    });
+                });
+
+                if response.response.clicked() {
+                    *selected = Some(i);
+                }
+            }
+        });
+}
+
+fn truncate_url(url: &str, max_len: usize) -> String {
+    if url.len() <= max_len {
+        url.to_string()
+    } else {
+        format!("{}...", &url[..max_len.saturating_sub(3)])
     }
 }
 
