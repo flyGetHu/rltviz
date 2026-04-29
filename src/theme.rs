@@ -12,6 +12,7 @@ pub const TEXT_PRIMARY: Color32 = Color32::from_rgb(0x1D, 0x1D, 0x1F);
 pub const TEXT_SECONDARY: Color32 = Color32::from_rgb(0x6E, 0x6E, 0x73);
 pub const TEXT_TERTIARY: Color32 = Color32::from_rgb(0xAE, 0xAE, 0xB2);
 pub const ACCENT: Color32 = Color32::from_rgb(0x00, 0x7A, 0xFF);
+#[allow(dead_code)]
 pub const ACCENT_HOVER: Color32 = Color32::from_rgb(0x00, 0x62, 0xCC);
 pub const POSITIVE: Color32 = Color32::from_rgb(0x34, 0xC7, 0x59);
 pub const NEGATIVE: Color32 = Color32::from_rgb(0xFF, 0x3B, 0x30);
@@ -51,6 +52,7 @@ pub fn metric_label(text: &str) -> egui::RichText {
         .color(TEXT_TERTIARY)
 }
 
+#[allow(dead_code)]
 pub fn mono(text: &str) -> egui::RichText {
     egui::RichText::new(text)
         .color(TEXT_PRIMARY)
