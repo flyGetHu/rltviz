@@ -2,6 +2,7 @@ mod app;
 mod config;
 mod control;
 mod engine;
+mod history;
 mod metrics;
 mod theme;
 mod ui;
