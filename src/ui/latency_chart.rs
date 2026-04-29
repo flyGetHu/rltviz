@@ -62,10 +62,9 @@ pub fn show(ui: &mut egui::Ui, snapshot: &MetricsSnapshot) {
     // Step info — muted
     ui.add_space(4.0);
     ui.label(theme::body_small(&format!(
-        "已运行 {:.0}s  |  阶梯 {}/{}",
+        "已运行 {:.0}s  |  阶梯 {}",
         snapshot.elapsed.as_secs_f64(),
-        snapshot.current_step + 1,
-        snapshot.step_progress
+        snapshot.current_step + 1
     )));
 
     // Step progress bar

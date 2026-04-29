@@ -41,14 +41,6 @@ pub fn show(ui: &mut egui::Ui, snapshot: &MetricsSnapshot) {
 
 fn stat_card(ui: &mut egui::Ui, width: f32, label: &str, value: &str, accent: egui::Color32) {
     ui.allocate_ui(egui::vec2(width, 56.0), |ui| {
-        // Bottom border as a visual divider
-        let rect = ui.max_rect();
-        ui.painter().hline(
-            rect.left()..=rect.right(),
-            rect.bottom() - 1.0,
-            egui::Stroke::new(1.0, theme::BORDER),
-        );
-
         ui.vertical_centered(|ui| {
             ui.add_space(2.0);
             ui.label(theme::metric_value(value, accent));

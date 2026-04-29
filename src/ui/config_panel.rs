@@ -125,41 +125,42 @@ pub fn show(
         ui.label(theme::heading("阶梯加压"));
         ui.add_space(4.0);
 
-        ui.horizontal(|ui| {
-            ui.label(theme::body("起始并发"));
-            ui.add(
-                egui::DragValue::new(&mut config.ramp_up.start_concurrency)
-                    .range(1..=10000)
-                    .speed(1),
-            );
-        });
-        ui.add_space(4.0);
-        ui.horizontal(|ui| {
-            ui.label(theme::body("最终并发"));
-            ui.add(
-                egui::DragValue::new(&mut config.ramp_up.end_concurrency)
-                    .range(1..=10000)
-                    .speed(1),
-            );
-        });
-        ui.add_space(4.0);
-        ui.horizontal(|ui| {
-            ui.label(theme::body("阶梯数"));
-            ui.add(
-                egui::DragValue::new(&mut config.ramp_up.steps)
-                    .range(0..=100)
-                    .speed(1),
-            );
-        });
-        ui.add_space(4.0);
-        ui.horizontal(|ui| {
-            ui.label(theme::body("每阶时长(秒)"));
-            ui.add(
-                egui::DragValue::new(&mut config.ramp_up.step_duration_secs)
-                    .range(1..=3600)
-                    .speed(1),
-            );
-        });
+        egui::Grid::new("ramp_up_params")
+            .num_columns(2)
+            .spacing([4.0, 4.0])
+            .show(ui, |ui| {
+                ui.label(theme::body("起始并发"));
+                ui.add(
+                    egui::DragValue::new(&mut config.ramp_up.start_concurrency)
+                        .range(1..=10000)
+                        .speed(1),
+                );
+                ui.end_row();
+
+                ui.label(theme::body("最终并发"));
+                ui.add(
+                    egui::DragValue::new(&mut config.ramp_up.end_concurrency)
+                        .range(1..=10000)
+                        .speed(1),
+                );
+                ui.end_row();
+
+                ui.label(theme::body("阶梯数"));
+                ui.add(
+                    egui::DragValue::new(&mut config.ramp_up.steps)
+                        .range(0..=100)
+                        .speed(1),
+                );
+                ui.end_row();
+
+                ui.label(theme::body("每阶时长(秒)"));
+                ui.add(
+                    egui::DragValue::new(&mut config.ramp_up.step_duration_secs)
+                        .range(1..=3600)
+                        .speed(1),
+                );
+                ui.end_row();
+            });
 
         ui.add_space(4.0);
         ui.label(theme::body_small(&format!(

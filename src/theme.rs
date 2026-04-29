@@ -65,6 +65,9 @@ pub fn apply_theme(ctx: &Context) {
     let mut style = (*ctx.style()).clone();
     let visuals = &mut style.visuals;
 
+    // Light mode — required for DragValue, ComboBox etc. to use light backgrounds
+    visuals.dark_mode = false;
+
     // Panel backgrounds
     visuals.window_fill = BG_PRIMARY;
     visuals.panel_fill = BG_SECONDARY;
@@ -77,9 +80,15 @@ pub fn apply_theme(ctx: &Context) {
     visuals.widgets.active.corner_radius = rounding;
 
     visuals.widgets.noninteractive.bg_fill = BG_PRIMARY;
+    visuals.widgets.noninteractive.weak_bg_fill = BG_PRIMARY;
     visuals.widgets.inactive.bg_fill = BG_TERTIARY;
+    visuals.widgets.inactive.weak_bg_fill = BG_TERTIARY;
     visuals.widgets.hovered.bg_fill = BG_HOVERED;
+    visuals.widgets.hovered.weak_bg_fill = BG_HOVERED;
     visuals.widgets.active.bg_fill = ACCENT;
+    visuals.widgets.active.weak_bg_fill = ACCENT;
+    visuals.widgets.open.bg_fill = BG_TERTIARY;
+    visuals.widgets.open.weak_bg_fill = BG_TERTIARY;
 
     let subtle_border = Stroke::new(1.0, BORDER);
     visuals.widgets.inactive.bg_stroke = subtle_border;
@@ -95,6 +104,10 @@ pub fn apply_theme(ctx: &Context) {
 
     // Hyperlink
     visuals.hyperlink_color = ACCENT;
+
+    // Input backgrounds — extreme_bg_color for TextEdit, code_bg_color for DragValue/ComboBox
+    visuals.extreme_bg_color = BG_TERTIARY;
+    visuals.code_bg_color = BG_TERTIARY;
 
     // Subtle background for inputs (button_frame = true required for bg_fill to render)
     visuals.striped = false;

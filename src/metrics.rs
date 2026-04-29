@@ -42,7 +42,6 @@ pub struct MetricsCollector {
     status_counts: HashMap<u16, u64>,
     error_count: u64,
     request_count: u64,
-    window_start: std::time::Instant,
 }
 
 impl MetricsCollector {
@@ -54,7 +53,6 @@ impl MetricsCollector {
             status_counts: HashMap::new(),
             error_count: 0,
             request_count: 0,
-            window_start: std::time::Instant::now(),
         };
         (collector, snapshot)
     }
@@ -68,8 +66,7 @@ impl MetricsCollector {
         }
     }
 
-    pub fn tick(&mut self, active_connections: u32, current_step: u32, step_progress: f64) {
-        let elapsed = self.window_start.elapsed();
+    pub fn tick_with_elapsed(&mut self, active_connections: u32, current_step: u32, step_progress: f64, elapsed: Duration) {
         let qps = if elapsed.as_secs_f64() > 0.0 {
             self.request_count as f64 / elapsed.as_secs_f64()
         } else {
@@ -124,7 +121,7 @@ mod tests {
         collector.record(500, Duration::from_millis(100), true);
         collector.record(500, Duration::from_millis(200), true);
 
-        collector.tick(5, 0, 0.5);
+        collector.tick_with_elapsed(5, 0, 0.5, Duration::from_secs(1));
 
         let snap = snapshot.read();
         assert_eq!(snap.total_requests, 5);

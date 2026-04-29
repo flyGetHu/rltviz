@@ -60,6 +60,7 @@ impl TestController {
         let (mut collector, snapshot_arc) = MetricsCollector::new();
         self.snapshot = snapshot_arc.clone();
 
+        let pause_rx_for_metrics = pause_rx.clone();
         let pool = HttpWorkerPool::new(
             config.http.clone(),
             config.ramp_up.start_concurrency as usize,
@@ -110,6 +111,9 @@ impl TestController {
         handle.spawn(async move {
             let mut tick_interval = tokio::time::interval(Duration::from_millis(100));
             let mut cancel_rx = cancel_rx_clone;
+            let pause_rx_for_metrics = pause_rx_for_metrics;
+            let mut paused_at: Option<Instant> = None;
+            let mut total_paused = Duration::ZERO;
             loop {
                 tokio::select! {
                     _ = cancel_rx.changed() => {
@@ -123,8 +127,20 @@ impl TestController {
                     collector.record(result.status_code, result.duration, result.is_error);
                 }
 
-                // Compute step info
-                let elapsed = start.elapsed();
+                // Track paused time
+                let is_paused = *pause_rx_for_metrics.borrow();
+                match (is_paused, paused_at) {
+                    (true, None) => paused_at = Some(Instant::now()),
+                    (false, Some(t)) => {
+                        total_paused += t.elapsed();
+                        paused_at = None;
+                    }
+                    _ => {}
+                }
+
+                // Compute step info using effective (non-paused) elapsed
+                let current_pause = paused_at.map(|t| t.elapsed()).unwrap_or(Duration::ZERO);
+                let elapsed = start.elapsed() - total_paused - current_pause;
                 let step_dur = Duration::from_secs(ramp_up_metrics.step_duration_secs);
                 let total_stages = ramp_up_metrics.total_stages();
                 let current_step = {
@@ -136,16 +152,17 @@ impl TestController {
                 let step_progress = (step_elapsed / step_dur.as_secs_f64()).min(1.0);
 
                 let active = ramp_up_metrics.concurrency_at_stage(current_step);
-                collector.tick(active, current_step, step_progress);
+                collector.tick_with_elapsed(active, current_step, step_progress, elapsed);
             }
 
             // Final tick
             while let Ok(result) = result_rx.try_recv() {
                 collector.record(result.status_code, result.duration, result.is_error);
             }
-            let elapsed = start.elapsed();
+            let current_pause = paused_at.map(|t| t.elapsed()).unwrap_or(Duration::ZERO);
+            let elapsed = start.elapsed() - total_paused - current_pause;
             let last_stage = ramp_up_metrics.total_stages().saturating_sub(1);
-            collector.tick(ramp_up_metrics.end_concurrency, last_stage, 1.0);
+            collector.tick_with_elapsed(ramp_up_metrics.end_concurrency, last_stage, 1.0, elapsed);
             snapshot_arc.write().elapsed = elapsed;
         });
 

@@ -121,7 +121,7 @@ impl HttpWorkerPool {
             HttpMethod::DELETE => client.delete(&config.url),
         };
 
-        let req = config.headers.iter().fold(req, |req, (k, v)| {
+        let req = config.headers.iter().filter(|(k, v)| !k.is_empty() && !v.is_empty()).fold(req, |req, (k, v)| {
             req.header(k.as_str(), v.as_str())
         });
 
