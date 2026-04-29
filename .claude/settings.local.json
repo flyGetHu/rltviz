@@ -20,7 +20,10 @@
       "Bash(cargo build *)",
       "Bash(cargo clippy *)",
       "Bash(cargo run *)",
-      "mcp__web-reader__webReader"
+      "mcp__web-reader__webReader",
+      "Bash(cargo metadata *)",
+      "mcp__context7__query-docs",
+      "Bash(bash \"C:/Users/97078/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.7/skills/brainstorming/scripts/start-server.sh\" --project-dir \"c:/Users/97078/workspace/rust/rltviz\")"
     ]
   }
 }
