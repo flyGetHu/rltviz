@@ -5,6 +5,7 @@ use crate::theme::{self, ACCENT, NEGATIVE, POSITIVE, WARNING};
 use curl_parser::ParsedRequest;
 use std::str::FromStr;
 
+#[allow(clippy::too_many_arguments)]
 pub fn show(
     ui: &mut egui::Ui,
     config: &mut AppConfig,
