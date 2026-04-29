@@ -1,47 +1,59 @@
 use crate::metrics::MetricsSnapshot;
+use crate::theme::{self, ACCENT, NEGATIVE, POSITIVE};
 
 pub fn show(ui: &mut egui::Ui, snapshot: &MetricsSnapshot) {
+    let card_w = (ui.available_width() - 24.0) / 4.0;
+
     ui.horizontal(|ui| {
-        stat_card(ui, "QPS", &format!("{:.0}", snapshot.qps), egui::Color32::from_rgb(33, 150, 243));
         stat_card(
             ui,
+            card_w,
+            "QPS",
+            &format!("{:.0}", snapshot.qps),
+            ACCENT,
+        );
+        ui.add_space(8.0);
+        stat_card(
+            ui,
+            card_w,
             "错误率",
             &format!("{:.1}%", snapshot.error_rate * 100.0),
-            if snapshot.error_rate > 0.05 {
-                egui::Color32::from_rgb(244, 67, 54)
-            } else {
-                egui::Color32::from_rgb(76, 175, 80)
-            },
+            if snapshot.error_rate > 0.05 { NEGATIVE } else { POSITIVE },
         );
+        ui.add_space(8.0);
         stat_card(
             ui,
+            card_w,
             "活跃连接",
             &format!("{}", snapshot.active_connections),
-            egui::Color32::from_rgb(156, 39, 176),
+            ACCENT,
         );
+        ui.add_space(8.0);
         stat_card(
             ui,
+            card_w,
             "总请求",
             &format!("{}", snapshot.total_requests),
-            egui::Color32::from_rgb(255, 152, 0),
+            ACCENT,
         );
     });
 }
 
-fn stat_card(ui: &mut egui::Ui, label: &str, value: &str, color: egui::Color32) {
-    let frame = egui::Frame::NONE
-        .fill(egui::Color32::from_rgb(250, 250, 250))
-        .corner_radius(egui::CornerRadius::same(6))
-        .inner_margin(egui::Margin::symmetric(12, 8));
-
-    frame.show(ui, |ui| {
-        ui.set_min_width(100.0);
-        ui.label(
-            egui::RichText::new(value)
-                .color(color)
-                .size(22.0)
-                .strong(),
+fn stat_card(ui: &mut egui::Ui, width: f32, label: &str, value: &str, accent: egui::Color32) {
+    ui.allocate_ui(egui::vec2(width, 56.0), |ui| {
+        // Bottom border as a visual divider
+        let rect = ui.max_rect();
+        ui.painter().hline(
+            rect.left()..=rect.right(),
+            rect.bottom() - 1.0,
+            egui::Stroke::new(1.0, theme::BORDER),
         );
-        ui.label(egui::RichText::new(label).size(12.0).color(egui::Color32::GRAY));
+
+        ui.vertical_centered(|ui| {
+            ui.add_space(2.0);
+            ui.label(theme::metric_value(value, accent));
+            ui.add_space(2.0);
+            ui.label(theme::metric_label(label));
+        });
     });
 }
