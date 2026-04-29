@@ -25,7 +25,7 @@ pub fn show(ui: &mut egui::Ui, snapshot: &MetricsSnapshot, state: &TestState) {
 
     ui.add_space(24.0);
 
-    latency_chart::show(ui, snapshot);
+    latency_chart::show(ui, snapshot, true);
 
     ui.add_space(24.0);
 
@@ -63,7 +63,7 @@ pub fn show_history(ui: &mut egui::Ui, record: &HistoryRecord) -> bool {
         .to_snapshot(record.config.ramp_up.end_concurrency);
     stat_cards::show(ui, &snapshot);
     ui.add_space(24.0);
-    latency_chart::show(ui, &snapshot);
+    latency_chart::show(ui, &snapshot, false);
     ui.add_space(24.0);
     status_chart::show(ui, &snapshot);
 

@@ -4,7 +4,7 @@ use crate::history::{self, HistoryRecord, HistoryStore, ResultSummary};
 use crate::theme;
 use crate::ui::{config_panel, control_bar, dashboard};
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum PanelTab {
     Config,
     History,
@@ -53,7 +53,7 @@ impl eframe::App for RltvizApp {
             let summary = ResultSummary::from_snapshot(&snapshot);
             let record = HistoryRecord::new(self.config.clone(), summary);
             self.history_store.add(record);
-            self.selected_history = self.selected_history.map(|i| i + 1);
+            self.selected_history = None;
         }
 
         // Clear selection when a test starts

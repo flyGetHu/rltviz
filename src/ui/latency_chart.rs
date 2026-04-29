@@ -1,7 +1,7 @@
 use crate::metrics::MetricsSnapshot;
 use crate::theme::{self, ACCENT};
 
-pub fn show(ui: &mut egui::Ui, snapshot: &MetricsSnapshot) {
+pub fn show(ui: &mut egui::Ui, snapshot: &MetricsSnapshot, show_progress: bool) {
     let p50_ms = snapshot.latency_p50.as_secs_f64() * 1000.0;
     let p90_ms = snapshot.latency_p90.as_secs_f64() * 1000.0;
     let p99_ms = snapshot.latency_p99.as_secs_f64() * 1000.0;
@@ -60,16 +60,18 @@ pub fn show(ui: &mut egui::Ui, snapshot: &MetricsSnapshot) {
     }
 
     // Step info — muted
-    ui.add_space(4.0);
-    ui.label(theme::body_small(&format!(
-        "已运行 {:.0}s  |  阶梯 {}",
-        snapshot.elapsed.as_secs_f64(),
-        snapshot.current_step + 1
-    )));
+    if show_progress {
+        ui.add_space(4.0);
+        ui.label(theme::body_small(&format!(
+            "已运行 {:.0}s  |  阶梯 {}",
+            snapshot.elapsed.as_secs_f64(),
+            snapshot.current_step + 1
+        )));
 
-    // Step progress bar
-    ui.add(
-        egui::ProgressBar::new(snapshot.step_progress as f32)
-            .text(format!("阶梯进度 {:.0}%", snapshot.step_progress * 100.0)),
-    );
+        // Step progress bar
+        ui.add(
+            egui::ProgressBar::new(snapshot.step_progress as f32)
+                .text(format!("阶梯进度 {:.0}%", snapshot.step_progress * 100.0)),
+        );
+    }
 }

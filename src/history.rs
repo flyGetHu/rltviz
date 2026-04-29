@@ -80,8 +80,20 @@ pub struct HistoryStore {
 impl HistoryStore {
     pub fn load(path: PathBuf) -> Self {
         let records = match fs::read_to_string(&path) {
-            Ok(content) => serde_json::from_str(&content).unwrap_or_default(),
-            Err(_) => Vec::new(),
+            Ok(content) => match serde_json::from_str(&content) {
+                Ok(records) => records,
+                Err(e) => {
+                    eprintln!("WARNING: Failed to parse history file {}: {}. Starting with empty history.", path.display(), e);
+                    let backup = path.with_extension("json.corrupted");
+                    let _ = fs::copy(&path, &backup);
+                    Vec::new()
+                }
+            },
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => Vec::new(),
+            Err(e) => {
+                eprintln!("WARNING: Could not read history file {}: {}. Starting with empty history.", path.display(), e);
+                Vec::new()
+            }
         };
         Self { records, path }
     }
@@ -97,8 +109,15 @@ impl HistoryStore {
     }
 
     fn save(&self) {
-        if let Ok(json) = serde_json::to_string_pretty(&self.records) {
-            let _ = fs::write(&self.path, json);
+        let Ok(json) = serde_json::to_string_pretty(&self.records) else {
+            return;
+        };
+        let tmp = self.path.with_extension("json.tmp");
+        if fs::write(&tmp, &json).is_err() {
+            return;
+        }
+        if let Err(e) = fs::rename(&tmp, &self.path) {
+            eprintln!("WARNING: Failed to save history: {}", e);
         }
     }
 }

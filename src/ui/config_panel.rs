@@ -429,10 +429,11 @@ fn show_history_tab(
 }
 
 fn truncate_url(url: &str, max_len: usize) -> String {
-    if url.len() <= max_len {
+    if url.chars().count() <= max_len {
         url.to_string()
     } else {
-        format!("{}...", &url[..max_len.saturating_sub(3)])
+        let truncated: String = url.chars().take(max_len.saturating_sub(3)).collect();
+        format!("{}...", truncated)
     }
 }
 
