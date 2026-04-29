@@ -96,9 +96,9 @@ pub fn apply_theme(ctx: &Context) {
     // Hyperlink
     visuals.hyperlink_color = ACCENT;
 
-    // No stripes, no boxed button frames
+    // Subtle background for inputs (button_frame = true required for bg_fill to render)
     visuals.striped = false;
-    visuals.button_frame = false;
+    visuals.button_frame = true;
     visuals.indent_has_left_vline = false;
 
     // Window (popup) corner radius
