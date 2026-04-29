@@ -1,4 +1,5 @@
 use crate::config::{AppConfig, HttpMethod};
+use crate::theme::{self, ACCENT, NEGATIVE};
 use curl_parser::ParsedRequest;
 use std::str::FromStr;
 
@@ -10,49 +11,81 @@ pub fn show(
     curl_import_text: &mut String,
     curl_import_error: &mut Option<String>,
 ) {
-    ui.heading("压测配置");
     ui.add_space(8.0);
 
     ui.add_enabled_ui(!running, |ui| {
-        // Import curl button
-        if ui.button("📋 从 cURL 导入").clicked() {
+        // Import curl button — secondary (text-only) style
+        if ui
+            .add(
+                egui::Button::new(
+                    egui::RichText::new("从 cURL 导入").size(13.0).color(ACCENT)
+                )
+                    .fill(egui::Color32::TRANSPARENT)
+                    .min_size(egui::vec2(0.0, 24.0)),
+            )
+            .clicked()
+        {
             *curl_import_open = true;
             *curl_import_error = None;
             curl_import_text.clear();
         }
-        ui.add_space(8.0);
+
+        ui.add_space(12.0);
+
+        // ── Target section ──
+        ui.label(theme::heading("请求目标"));
+        ui.add_space(4.0);
 
         // URL
-        ui.label("目标 URL");
+        ui.label(theme::body("URL"));
         ui.add(
             egui::TextEdit::singleline(&mut config.http.url)
                 .hint_text("https://api.example.com/endpoint")
                 .desired_width(f32::INFINITY),
         );
-        ui.add_space(6.0);
+
+        ui.add_space(4.0);
 
         // Method
-        ui.horizontal(|ui| {
-            ui.label("HTTP Method");
-            egui::ComboBox::from_id_salt("http_method")
-                .selected_text(config.http.method.as_str())
-                .show_ui(ui, |ui| {
-                    ui.selectable_value(&mut config.http.method, HttpMethod::GET, "GET");
-                    ui.selectable_value(&mut config.http.method, HttpMethod::POST, "POST");
-                    ui.selectable_value(&mut config.http.method, HttpMethod::PUT, "PUT");
-                    ui.selectable_value(&mut config.http.method, HttpMethod::DELETE, "DELETE");
-                });
-        });
-        ui.add_space(6.0);
+        ui.label(theme::body("Method"));
+        egui::ComboBox::from_id_salt("http_method")
+            .selected_text(config.http.method.as_str())
+            .show_ui(ui, |ui| {
+                ui.selectable_value(&mut config.http.method, HttpMethod::GET, "GET");
+                ui.selectable_value(&mut config.http.method, HttpMethod::POST, "POST");
+                ui.selectable_value(&mut config.http.method, HttpMethod::PUT, "PUT");
+                ui.selectable_value(&mut config.http.method, HttpMethod::DELETE, "DELETE");
+            });
 
-        // Headers
-        ui.label("Headers");
+        ui.add_space(12.0);
+
+        // ── Headers section ──
+        ui.label(theme::heading("Headers"));
+        ui.add_space(4.0);
+
         let mut remove_idx = None;
         for (i, (key, value)) in config.http.headers.iter_mut().enumerate() {
             ui.horizontal(|ui| {
-                ui.add(egui::TextEdit::singleline(key).hint_text("Key").desired_width(120.0));
-                ui.add(egui::TextEdit::singleline(value).hint_text("Value").desired_width(160.0));
-                if ui.button("✕").clicked() {
+                ui.add(
+                    egui::TextEdit::singleline(key)
+                        .hint_text("Key")
+                        .desired_width(120.0),
+                );
+                ui.add(
+                    egui::TextEdit::singleline(value)
+                        .hint_text("Value")
+                        .desired_width(150.0),
+                );
+                if ui
+                    .add(
+                        egui::Button::new(
+                            egui::RichText::new("移除").size(11.0).color(NEGATIVE)
+                        )
+                            .fill(egui::Color32::TRANSPARENT)
+                            .min_size(egui::vec2(0.0, 20.0)),
+                    )
+                    .clicked()
+                {
                     remove_idx = Some(i);
                 }
             });
@@ -60,62 +93,89 @@ pub fn show(
         if let Some(i) = remove_idx {
             config.http.headers.remove(i);
         }
-        if ui.button("+ 添加 Header").clicked() {
+        if ui
+            .add(
+                egui::Button::new(
+                    egui::RichText::new("+ 添加 Header").size(13.0).color(ACCENT)
+                )
+                    .fill(egui::Color32::TRANSPARENT)
+                    .min_size(egui::vec2(0.0, 24.0)),
+            )
+            .clicked()
+        {
             config.http.headers.push((String::new(), String::new()));
         }
-        ui.add_space(6.0);
 
-        // Body
+        // ── Body section (conditional) ──
         if matches!(config.http.method, HttpMethod::POST | HttpMethod::PUT) {
-            ui.label("Request Body");
+            ui.add_space(12.0);
+            ui.label(theme::heading("Request Body"));
+            ui.add_space(4.0);
             ui.add(
                 egui::TextEdit::multiline(&mut config.http.body)
                     .hint_text("{\"key\": \"value\"}")
                     .desired_width(f32::INFINITY)
                     .desired_rows(4),
             );
-            ui.add_space(6.0);
         }
 
-        ui.separator();
+        ui.add_space(18.0);
 
-        // Ramp-up
-        ui.heading("阶梯加压");
+        // ── Ramp-up section ──
+        ui.label(theme::heading("阶梯加压"));
         ui.add_space(4.0);
 
         ui.horizontal(|ui| {
-            ui.label("起始并发");
-            ui.add(egui::DragValue::new(&mut config.ramp_up.start_concurrency).range(1..=10000));
+            ui.label(theme::body("起始并发"));
+            ui.add(
+                egui::DragValue::new(&mut config.ramp_up.start_concurrency)
+                    .range(1..=10000)
+                    .speed(1),
+            );
         });
+        ui.add_space(4.0);
         ui.horizontal(|ui| {
-            ui.label("最终并发");
-            ui.add(egui::DragValue::new(&mut config.ramp_up.end_concurrency).range(1..=10000));
+            ui.label(theme::body("最终并发"));
+            ui.add(
+                egui::DragValue::new(&mut config.ramp_up.end_concurrency)
+                    .range(1..=10000)
+                    .speed(1),
+            );
         });
+        ui.add_space(4.0);
         ui.horizontal(|ui| {
-            ui.label("阶梯数");
-            ui.add(egui::DragValue::new(&mut config.ramp_up.steps).range(0..=100));
+            ui.label(theme::body("阶梯数"));
+            ui.add(
+                egui::DragValue::new(&mut config.ramp_up.steps)
+                    .range(0..=100)
+                    .speed(1),
+            );
         });
+        ui.add_space(4.0);
         ui.horizontal(|ui| {
-            ui.label("每阶时长(秒)");
-            ui.add(egui::DragValue::new(&mut config.ramp_up.step_duration_secs).range(1..=3600));
+            ui.label(theme::body("每阶时长(秒)"));
+            ui.add(
+                egui::DragValue::new(&mut config.ramp_up.step_duration_secs)
+                    .range(1..=3600)
+                    .speed(1),
+            );
         });
 
-        ui.add_space(6.0);
-
-        // Preview
-        ui.label(format!(
+        ui.add_space(4.0);
+        ui.label(theme::body_small(&format!(
             "共 {} 阶段，总计 {} 秒",
             config.ramp_up.total_stages(),
             config.ramp_up.total_duration_secs()
-        ));
+        )));
 
-        // Simple bar chart preview
+        // Ramp-up bar preview
         let total_stages = config.ramp_up.total_stages();
         if total_stages > 0 {
             let available_width = ui.available_width();
             let bar_height = 40.0;
             let spacing = 2.0;
-            let bar_width = (available_width / total_stages as f32) - spacing;
+            let bar_w = (available_width / total_stages as f32) - spacing;
+            let max_conc = config.ramp_up.end_concurrency.max(1) as f32;
 
             ui.add_space(4.0);
             let (response, painter) = ui.allocate_painter(
@@ -126,38 +186,37 @@ pub fn show(
 
             for i in 0..total_stages {
                 let concurrency = config.ramp_up.concurrency_at_stage(i);
-                let max_conc = config.ramp_up.end_concurrency.max(1) as f32;
                 let fraction = concurrency as f32 / max_conc;
-                let x = rect.left() + i as f32 * (bar_width + spacing);
+                let x = rect.left() + i as f32 * (bar_w + spacing);
                 let h = fraction * bar_height;
                 let y = rect.bottom() - 16.0 - h;
 
                 let color = egui::Color32::from_rgb(
-                    50 + (205.0 * fraction) as u8,
-                    180 - (100.0 * fraction) as u8,
-                    100 + (50.0 * fraction) as u8,
+                    200 - (120.0 * fraction) as u8,
+                    210 - (90.0 * fraction) as u8,
+                    240 - (60.0 * fraction) as u8,
                 );
 
                 painter.rect_filled(
-                    egui::Rect::from_min_size(egui::pos2(x, y), egui::vec2(bar_width, h)),
+                    egui::Rect::from_min_size(egui::pos2(x, y), egui::vec2(bar_w, h)),
                     egui::CornerRadius::same(2),
                     color,
                 );
 
                 if total_stages <= 10 {
                     painter.text(
-                        egui::pos2(x + bar_width / 2.0, rect.bottom() - 4.0),
+                        egui::pos2(x + bar_w / 2.0, rect.bottom() - 4.0),
                         egui::Align2::CENTER_BOTTOM,
                         format!("{}", concurrency),
                         egui::FontId::new(10.0, egui::FontFamily::Proportional),
-                        egui::Color32::GRAY,
+                        theme::TEXT_TERTIARY,
                     );
                 }
             }
         }
     });
 
-    // Import curl popup window
+    // ── Import curl popup window ──
     if *curl_import_open {
         use std::cell::Cell;
         let mut open = true;
@@ -171,7 +230,7 @@ pub fn show(
             .anchor(egui::Align2::CENTER_CENTER, egui::vec2(0.0, 0.0))
             .min_width(500.0)
             .show(ui.ctx(), |ui| {
-                ui.label("粘贴 cURL 命令:");
+                ui.label(theme::body("粘贴 cURL 命令:"));
                 ui.add_space(4.0);
 
                 ui.add(
@@ -184,15 +243,33 @@ pub fn show(
                 ui.add_space(8.0);
 
                 if let Some(err) = curl_import_error.as_ref() {
-                    ui.colored_label(egui::Color32::RED, format!("错误: {}", err));
+                    ui.colored_label(NEGATIVE, format!("错误: {}", err));
                     ui.add_space(4.0);
                 }
 
                 ui.horizontal(|ui| {
-                    if ui.button("取消").clicked() {
+                    if ui
+                        .add(
+                            egui::Button::new(
+                                egui::RichText::new("取消").size(13.0).color(theme::TEXT_PRIMARY)
+                            )
+                                .fill(egui::Color32::TRANSPARENT)
+                                .min_size(egui::vec2(56.0, 28.0)),
+                        )
+                        .clicked()
+                    {
                         cancel_clicked.set(true);
                     }
-                    if ui.button("导入").clicked() {
+
+                    ui.add_space(8.0);
+
+                    let import_btn = egui::Button::new(
+                        egui::RichText::new("导入").size(13.0).color(egui::Color32::WHITE).strong()
+                    )
+                        .fill(ACCENT)
+                        .min_size(egui::vec2(72.0, 32.0));
+
+                    if ui.add(import_btn).clicked() {
                         import_clicked.set(true);
                     }
                 });
@@ -232,14 +309,12 @@ pub fn show(
 /// Normalize a curl command for the parser: strip line continuations,
 /// convert long-form flags (--request, --url, --header, --data) to short form.
 fn normalize_curl(cmd: &str) -> String {
-    // Remove backslash line continuations and trailing spaces
     let joined = cmd
         .lines()
         .map(|l| l.strip_suffix('\\').unwrap_or(l).trim_end())
         .collect::<Vec<_>>()
         .join(" ");
 
-    // Normalize token by token
     let tokens: Vec<&str> = joined.split_whitespace().collect();
     let mut out = Vec::with_capacity(tokens.len());
     let mut i = 0;
@@ -255,7 +330,6 @@ fn normalize_curl(cmd: &str) -> String {
                 }
             }
             "--url" => {
-                // --url VALUE → just emit VALUE as positional arg
                 if let Some(&val) = tokens.get(i + 1) {
                     out.push(val.to_string());
                     i += 2;
