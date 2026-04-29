@@ -6,6 +6,7 @@ use std::sync::Arc;
 pub const BG_PRIMARY: Color32 = Color32::from_rgb(0xFF, 0xFF, 0xFF);
 pub const BG_SECONDARY: Color32 = Color32::from_rgb(0xF5, 0xF5, 0xF7);
 pub const BG_TERTIARY: Color32 = Color32::from_rgb(0xEB, 0xEB, 0xED);
+pub const BG_HOVERED: Color32 = Color32::from_rgb(0xE0, 0xE0, 0xE5);
 pub const BORDER: Color32 = Color32::from_rgb(0xD1, 0xD1, 0xD6);
 pub const TEXT_PRIMARY: Color32 = Color32::from_rgb(0x1D, 0x1D, 0x1F);
 pub const TEXT_SECONDARY: Color32 = Color32::from_rgb(0x6E, 0x6E, 0x73);
@@ -52,7 +53,6 @@ pub fn metric_label(text: &str) -> egui::RichText {
 
 pub fn mono(text: &str) -> egui::RichText {
     egui::RichText::new(text)
-        .size(12.0)
         .color(TEXT_PRIMARY)
         .font(egui::FontId::monospace(12.0))
 }
@@ -76,7 +76,7 @@ pub fn apply_theme(ctx: &Context) {
 
     visuals.widgets.noninteractive.bg_fill = BG_PRIMARY;
     visuals.widgets.inactive.bg_fill = BG_TERTIARY;
-    visuals.widgets.hovered.bg_fill = Color32::from_rgb(0xE0, 0xE0, 0xE5);
+    visuals.widgets.hovered.bg_fill = BG_HOVERED;
     visuals.widgets.active.bg_fill = ACCENT;
 
     let subtle_border = Stroke::new(1.0, BORDER);
