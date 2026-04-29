@@ -100,7 +100,6 @@ impl eframe::App for RltvizApp {
                                 self.config = record.config.clone();
                                 self.active_tab = PanelTab::Config;
                                 self.selected_history = None;
-                                self.controller.start(self.config.clone(), &self.handle);
                             }
                         } else {
                             self.selected_history = None;

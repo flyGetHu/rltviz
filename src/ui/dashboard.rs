@@ -71,7 +71,7 @@ pub fn show_history(ui: &mut egui::Ui, record: &HistoryRecord) -> bool {
     let mut clicked = false;
     ui.vertical_centered(|ui| {
         let btn = egui::Button::new(
-            egui::RichText::new("复用此配置并运行")
+            egui::RichText::new("复用配置")
                 .size(13.0)
                 .color(egui::Color32::WHITE)
                 .strong(),
