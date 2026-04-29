@@ -89,7 +89,7 @@ pub fn apply_theme(ctx: &Context) {
     visuals.widgets.active.fg_stroke = Stroke::new(2.0, ACCENT);
 
     // Selection color
-    visuals.selection.bg_fill = Color32::from_rgba_premultiplied(0x00, 0x7A, 0xFF, 0x40);
+    visuals.selection.bg_fill = Color32::from_rgba_premultiplied(0x00, 0x1E, 0x40, 0x40);
 
     // Hyperlink
     visuals.hyperlink_color = ACCENT;
