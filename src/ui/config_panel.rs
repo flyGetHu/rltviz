@@ -416,7 +416,12 @@ fn show_history_tab(
                     });
                 });
 
-                if response.response.clicked() {
+                let click = ui.interact(
+                    response.response.rect,
+                    egui::Id::new("history_rec").with(i),
+                    egui::Sense::click(),
+                );
+                if click.clicked() {
                     *selected = Some(i);
                 }
             }
