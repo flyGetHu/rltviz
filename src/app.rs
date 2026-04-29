@@ -14,7 +14,7 @@ pub struct RltvizApp {
 
 impl RltvizApp {
     pub fn new(cc: &eframe::CreationContext<'_>, handle: tokio::runtime::Handle) -> Self {
-        theme::setup_theme(&cc.egui_ctx);
+        theme::apply_theme(&cc.egui_ctx);
         Self {
             config: AppConfig::default(),
             controller: TestController::new(),
@@ -36,8 +36,8 @@ impl eframe::App for RltvizApp {
 
         egui::SidePanel::left("config_panel")
             .resizable(true)
-            .default_width(380.0)
-            .min_width(300.0)
+            .default_width(340.0)
+            .min_width(280.0)
             .show(ctx, |ui| {
                 let running = state == TestState::Running || state == TestState::Paused;
                 config_panel::show(
@@ -48,12 +48,16 @@ impl eframe::App for RltvizApp {
                     &mut self.curl_import_text,
                     &mut self.curl_import_error,
                 );
-                ui.separator();
+                ui.add_space(18.0);
                 control_bar::show(ui, &state, &mut self.controller, &self.config, &self.handle);
             });
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            dashboard::show(ui, &snapshot, &state);
+            egui::Frame::NONE
+                .inner_margin(egui::Margin::same(24))
+                .show(ui, |ui| {
+                    dashboard::show(ui, &snapshot, &state);
+                });
         });
 
         // Request repaint for real-time metrics
