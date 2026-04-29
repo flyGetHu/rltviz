@@ -81,7 +81,9 @@ impl eframe::App for RltvizApp {
                     &mut self.selected_history,
                 );
                 ui.add_space(18.0);
-                control_bar::show(ui, &state, &mut self.controller, &self.config, &self.handle);
+                if matches!(self.active_tab, PanelTab::Config) {
+                    control_bar::show(ui, &state, &mut self.controller, &self.config, &self.handle);
+                }
             });
 
         egui::CentralPanel::default().show(ctx, |ui| {
