@@ -1,5 +1,5 @@
 use crate::metrics::MetricsSnapshot;
-use crate::theme::{self, ACCENT, TEXT_PRIMARY, TEXT_SECONDARY, TEXT_TERTIARY};
+use crate::theme::{self, NEGATIVE, POSITIVE, TEXT_PRIMARY, TEXT_SECONDARY, TEXT_TERTIARY, WARNING};
 
 pub fn show(ui: &mut egui::Ui, snapshot: &MetricsSnapshot) {
     if snapshot.status_codes.is_empty() {
@@ -37,10 +37,10 @@ pub fn show(ui: &mut egui::Ui, snapshot: &MetricsSnapshot) {
         let y = rect.top() + i as f32 * (bar_height + gap);
 
         let bar_color = match code / 100 {
-            2 => TEXT_PRIMARY,
+            2 => POSITIVE,
             3 => TEXT_SECONDARY,
-            4 => TEXT_TERTIARY,
-            5 => ACCENT,
+            4 => WARNING,
+            5 => NEGATIVE,
             _ => TEXT_TERTIARY,
         };
 

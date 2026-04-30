@@ -1,7 +1,7 @@
 use crate::app::PanelTab;
 use crate::config::{AppConfig, HttpMethod};
 use crate::history::HistoryRecord;
-use crate::theme::{self, ACCENT, NEGATIVE, POSITIVE, WARNING};
+use crate::theme::{self, ACCENT, BG_TERTIARY, BORDER, NEGATIVE, POSITIVE, WARNING};
 
 #[allow(clippy::too_many_arguments)]
 pub fn show(
@@ -350,7 +350,9 @@ fn show_history_tab(
                         .outer_margin(egui::Margin::symmetric(0, 2))
                 } else {
                     egui::Frame::NONE
+                        .fill(BG_TERTIARY)
                         .inner_margin(egui::Margin::same(8))
+                        .stroke(egui::Stroke::new(1.0, BORDER))
                         .outer_margin(egui::Margin::symmetric(0, 2))
                 };
 
