@@ -23,10 +23,6 @@ jobs:
             os: macos-latest
             artifact_name: rltviz-macos-aarch64
             binary_name: rltviz
-          - target: x86_64-apple-darwin
-            os: macos-13
-            artifact_name: rltviz-macos-x86_64
-            binary_name: rltviz
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
             artifact_name: rltviz-linux-x86_64
@@ -107,7 +103,6 @@ jobs:
             |------|----------|
             | `rltviz-windows-x86_64.exe` | Windows x86_64 |
             | `rltviz-macos-aarch64` | macOS Apple Silicon |
-            | `rltviz-macos-x86_64` | macOS Intel |
             | `rltviz-linux-x86_64` | Linux x86_64 |
           files: artifacts/*
           make_latest: true
