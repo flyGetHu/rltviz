@@ -86,14 +86,15 @@ jobs:
         run: |
           echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
           echo "date=$(date -u +%Y-%m-%d)" >> $GITHUB_OUTPUT
+          echo "tag_name=$(date -u +%Y%m%d-%H%M%S)-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
-      - name: Create/update continuous release
+      - name: Create release
         uses: softprops/action-gh-release@v2
         with:
-          tag: continuous
-          name: Continuous Build (${{ steps.info.outputs.date }})
+          tag: ${{ steps.info.outputs.tag_name }}
+          name: Build ${{ steps.info.outputs.date }} (${{ steps.info.outputs.sha_short }})
           body: |
-            Latest build from `master` branch.
+            Build from `master` branch.
 
             - **Commit**: `${{ steps.info.outputs.sha_short }}`
             - **Date**: ${{ steps.info.outputs.date }}
