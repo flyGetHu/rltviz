@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 cargo build               # debug build
 cargo build --release     # release build (with embedded fonts)
 cargo run --release       # run the GUI application
-cargo test                # all tests (20 total)
+cargo test                # all tests (44 total)
 cargo test <module>       # e.g., cargo test config, cargo test engine
 cargo test <test_name>    # single test (e.g., cargo test test_percentiles)
 cargo clippy -- -D warnings  # lint with no warnings allowed
@@ -32,6 +32,9 @@ Desktop GUI HTTP load testing tool built with egui 0.31 + Tokio. Two-window layo
 | stat_cards | `ui/stat_cards.rs` | QPS/error rate/connections/total cards |
 | latency_chart | `ui/latency_chart.rs` | P50/P90/P99 bar chart + step progress |
 | status_chart | `ui/status_chart.rs` | Status code horizontal bars |
+| curl_import | `curl_import.rs` | cURL command parsing, normalization, and import |
+| config | `config.rs` | Request configuration model (method, URL, headers, body) |
+| theme | `theme.rs` | Custom color scheme and egui visual style |
 
 **AppCore layer** (`src/control.rs`, `src/metrics.rs`) — Orchestration and aggregation:
 - `TestController` manages lifecycle: start/pause/resume/stop, ramp-up timer, auto-stop after final stage
@@ -75,6 +78,10 @@ Idle ──start()──► Running ──pause()──► Paused ──resume()
 - **egui 0.31 API**: `CornerRadius::same(N)`, `Frame::NONE`, no `Rounding`/`set_enabled`
 - **Atomic persistence**: `HistoryStore::save()` writes to `.json.tmp` then `fs::rename` — never direct write
 - **State transition detection**: `prev_state` field tracks last frame's `TestState` to detect transitions (Running→Stopped triggers auto-save)
+
+## CI/Release
+
+`.github/workflows/release.yml` — cross-platform build (Windows/macOS ARM). Triggered on push to master. Produces GitHub Release with platform binaries.
 
 ## Gotchas
 
