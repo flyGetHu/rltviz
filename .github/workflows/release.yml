@@ -1,0 +1,116 @@
+name: Build & Release
+
+on:
+  push:
+    branches: [master]
+
+env:
+  CARGO_PROFILE_RELEASE_LTO: true
+  CARGO_PROFILE_RELEASE_CODEGEN_UNITS: 1
+  CARGO_PROFILE_RELEASE_STRIP: true
+  CARGO_PROFILE_RELEASE_PANIC: abort
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            artifact_name: rltviz-windows-x86_64.exe
+            binary_name: rltviz.exe
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            artifact_name: rltviz-macos-aarch64
+            binary_name: rltviz
+          - target: x86_64-apple-darwin
+            os: macos-13
+            artifact_name: rltviz-macos-x86_64
+            binary_name: rltviz
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            artifact_name: rltviz-linux-x86_64
+            binary_name: rltviz
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libxcb-render0-dev \
+            libxcb-shape0-dev \
+            libxcb-xfixes0-dev \
+            libxkbcommon-dev \
+            libgl-dev \
+            libegl-dev
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+
+      - name: Build
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Rename binary
+        shell: bash
+        run: |
+          mv target/${{ matrix.target }}/release/${{ matrix.binary_name }} \
+             ${{ matrix.artifact_name }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.artifact_name }}
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Compute release info
+        id: info
+        run: |
+          echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "date=$(date -u +%Y-%m-%d)" >> $GITHUB_OUTPUT
+
+      - name: Create/update continuous release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag: continuous
+          name: Continuous Build (${{ steps.info.outputs.date }})
+          body: |
+            Latest build from `master` branch.
+
+            - **Commit**: `${{ steps.info.outputs.sha_short }}`
+            - **Date**: ${{ steps.info.outputs.date }}
+
+            **Artifacts:**
+            | File | Platform |
+            |------|----------|
+            | `rltviz-windows-x86_64.exe` | Windows x86_64 |
+            | `rltviz-macos-aarch64` | macOS Apple Silicon |
+            | `rltviz-macos-x86_64` | macOS Intel |
+            | `rltviz-linux-x86_64` | Linux x86_64 |
+          files: artifacts/*
+          make_latest: true
+          prerelease: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
