@@ -7,6 +7,9 @@ pub enum HttpMethod {
     POST,
     PUT,
     DELETE,
+    PATCH,
+    HEAD,
+    OPTIONS,
 }
 
 impl HttpMethod {
@@ -16,6 +19,9 @@ impl HttpMethod {
             HttpMethod::POST => "POST",
             HttpMethod::PUT => "PUT",
             HttpMethod::DELETE => "DELETE",
+            HttpMethod::PATCH => "PATCH",
+            HttpMethod::HEAD => "HEAD",
+            HttpMethod::OPTIONS => "OPTIONS",
         }
     }
 }
@@ -27,6 +33,9 @@ impl HttpMethod {
             "POST" => Some(Self::POST),
             "PUT" => Some(Self::PUT),
             "DELETE" => Some(Self::DELETE),
+            "PATCH" => Some(Self::PATCH),
+            "HEAD" => Some(Self::HEAD),
+            "OPTIONS" => Some(Self::OPTIONS),
             _ => None,
         }
     }
@@ -44,6 +53,8 @@ pub struct HttpConfig {
     pub method: HttpMethod,
     pub headers: Vec<(String, String)>,
     pub body: String,
+    #[serde(default)]
+    pub insecure: bool,
 }
 
 impl Default for HttpConfig {
@@ -53,6 +64,7 @@ impl Default for HttpConfig {
             method: HttpMethod::GET,
             headers: vec![],
             body: String::new(),
+            insecure: false,
         }
     }
 }
@@ -186,7 +198,9 @@ mod tests {
         assert_eq!(HttpMethod::from_str("POST"), Some(HttpMethod::POST));
         assert_eq!(HttpMethod::from_str("PUT"), Some(HttpMethod::PUT));
         assert_eq!(HttpMethod::from_str("DELETE"), Some(HttpMethod::DELETE));
-        assert_eq!(HttpMethod::from_str("PATCH"), None);
+        assert_eq!(HttpMethod::from_str("PATCH"), Some(HttpMethod::PATCH));
+        assert_eq!(HttpMethod::from_str("HEAD"), Some(HttpMethod::HEAD));
+        assert_eq!(HttpMethod::from_str("OPTIONS"), Some(HttpMethod::OPTIONS));
         assert_eq!(HttpMethod::from_str(""), None);
     }
 

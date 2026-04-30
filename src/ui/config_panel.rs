@@ -2,8 +2,6 @@ use crate::app::PanelTab;
 use crate::config::{AppConfig, HttpMethod};
 use crate::history::HistoryRecord;
 use crate::theme::{self, ACCENT, NEGATIVE, POSITIVE, WARNING};
-use curl_parser::ParsedRequest;
-use std::str::FromStr;
 
 #[allow(clippy::too_many_arguments)]
 pub fn show(
@@ -76,7 +74,15 @@ pub fn show(
                 ui.selectable_value(&mut config.http.method, HttpMethod::POST, "POST");
                 ui.selectable_value(&mut config.http.method, HttpMethod::PUT, "PUT");
                 ui.selectable_value(&mut config.http.method, HttpMethod::DELETE, "DELETE");
+                ui.selectable_value(&mut config.http.method, HttpMethod::PATCH, "PATCH");
+                ui.selectable_value(&mut config.http.method, HttpMethod::HEAD, "HEAD");
+                ui.selectable_value(&mut config.http.method, HttpMethod::OPTIONS, "OPTIONS");
             });
+
+        ui.add_space(4.0);
+
+        // Insecure toggle
+        ui.checkbox(&mut config.http.insecure, "跳过 TLS 验证 (-k)");
 
         ui.add_space(12.0);
 
@@ -128,7 +134,7 @@ pub fn show(
         }
 
         // ── Body section (conditional) ──
-        if matches!(config.http.method, HttpMethod::POST | HttpMethod::PUT) {
+        if matches!(config.http.method, HttpMethod::POST | HttpMethod::PUT | HttpMethod::PATCH) {
             ui.add_space(12.0);
             ui.label(theme::heading("Request Body"));
             ui.add_space(4.0);
@@ -301,24 +307,11 @@ pub fn show(
             *curl_import_open = false;
             *curl_import_error = None;
         } else if import_clicked.get() {
-            let trimmed = curl_import_text.trim();
-            if trimmed.is_empty() {
-                *curl_import_error = Some("cURL 命令为空".to_string());
+            if let Err(msg) = crate::curl_import::import_curl(curl_import_text, config) {
+                *curl_import_error = Some(msg);
             } else {
-                let normalized = normalize_curl(trimmed);
-                match ParsedRequest::from_str(&normalized) {
-                    Ok(parsed) => {
-                        if let Err(msg) = populate_config(config, &parsed) {
-                            *curl_import_error = Some(msg);
-                        } else {
-                            *curl_import_open = false;
-                            *curl_import_error = None;
-                        }
-                    }
-                    Err(e) => {
-                        *curl_import_error = Some(format!("解析失败: {}", e));
-                    }
-                }
+                *curl_import_open = false;
+                *curl_import_error = None;
             }
         }
 
@@ -370,6 +363,9 @@ fn show_history_tab(
                             HttpMethod::POST => WARNING,
                             HttpMethod::PUT => POSITIVE,
                             HttpMethod::DELETE => NEGATIVE,
+                            HttpMethod::PATCH => WARNING,
+                            HttpMethod::HEAD => ACCENT,
+                            HttpMethod::OPTIONS => ACCENT,
                         };
                         ui.label(
                             egui::RichText::new(record.config.http.method.as_str())
@@ -437,73 +433,3 @@ fn truncate_url(url: &str, max_len: usize) -> String {
     }
 }
 
-/// Normalize a curl command for the parser: strip line continuations,
-/// convert long-form flags (--request, --url, --header, --data) to short form.
-fn normalize_curl(cmd: &str) -> String {
-    let joined = cmd
-        .lines()
-        .map(|l| l.strip_suffix('\\').unwrap_or(l).trim_end())
-        .collect::<Vec<_>>()
-        .join(" ");
-
-    let tokens: Vec<&str> = joined.split_whitespace().collect();
-    let mut out = Vec::with_capacity(tokens.len());
-    let mut i = 0;
-    while i < tokens.len() {
-        let t = tokens[i];
-        match t {
-            "--request" | "-X" => {
-                out.push("-X".to_string());
-                if let Some(&val) = tokens.get(i + 1) {
-                    out.push(val.to_string());
-                    i += 2;
-                    continue;
-                }
-            }
-            "--url" => {
-                if let Some(&val) = tokens.get(i + 1) {
-                    out.push(val.to_string());
-                    i += 2;
-                    continue;
-                }
-            }
-            "--header" => {
-                out.push("-H".to_string());
-                if let Some(&val) = tokens.get(i + 1) {
-                    out.push(val.to_string());
-                    i += 2;
-                    continue;
-                }
-            }
-            "--data" | "--data-raw" | "--data-binary" => {
-                out.push("-d".to_string());
-                if let Some(&val) = tokens.get(i + 1) {
-                    out.push(val.to_string());
-                    i += 2;
-                    continue;
-                }
-            }
-            _ => {
-                out.push(t.to_string());
-            }
-        }
-        i += 1;
-    }
-    out.join(" ")
-}
-
-fn populate_config(config: &mut AppConfig, parsed: &ParsedRequest) -> Result<(), String> {
-    let method = HttpMethod::from_str(parsed.method.as_str())
-        .ok_or_else(|| format!("不支持的方法: {}。支持: GET, POST, PUT, DELETE", parsed.method))?;
-
-    config.http.url = parsed.url.to_string();
-    config.http.method = method;
-    config.http.headers.clear();
-    for (name, value) in parsed.headers.iter() {
-        let key = name.as_str().to_string();
-        let val = value.to_str().unwrap_or("").to_string();
-        config.http.headers.push((key, val));
-    }
-    config.http.body = parsed.body().unwrap_or_default();
-    Ok(())
-}

@@ -51,7 +51,10 @@ impl HttpWorkerPool {
     }
 
     async fn run(self, total_workers: usize) {
-        let client = reqwest::Client::new();
+        let client = reqwest::Client::builder()
+            .danger_accept_invalid_certs(self.config.insecure)
+            .build()
+            .unwrap_or_else(|_| reqwest::Client::new());
 
         let mut handles = Vec::with_capacity(total_workers);
 
@@ -119,13 +122,16 @@ impl HttpWorkerPool {
             HttpMethod::POST => client.post(&config.url),
             HttpMethod::PUT => client.put(&config.url),
             HttpMethod::DELETE => client.delete(&config.url),
+            HttpMethod::PATCH => client.patch(&config.url),
+            HttpMethod::HEAD => client.head(&config.url),
+            HttpMethod::OPTIONS => client.request(reqwest::Method::OPTIONS, &config.url),
         };
 
         let req = config.headers.iter().filter(|(k, v)| !k.is_empty() && !v.is_empty()).fold(req, |req, (k, v)| {
             req.header(k.as_str(), v.as_str())
         });
 
-        let req = if matches!(config.method, HttpMethod::POST | HttpMethod::PUT) && !config.body.is_empty() {
+        let req = if matches!(config.method, HttpMethod::POST | HttpMethod::PUT | HttpMethod::PATCH) && !config.body.is_empty() {
             req.body(config.body.clone())
         } else {
             req
@@ -164,6 +170,7 @@ mod tests {
             method: HttpMethod::GET,
             headers: vec![],
             body: String::new(),
+            insecure: false,
         };
         let client = reqwest::Client::new();
         let result = HttpWorkerPool::execute_request(&client, &config).await;
@@ -179,6 +186,7 @@ mod tests {
             method: HttpMethod::GET,
             headers: vec![],
             body: String::new(),
+            insecure: false,
         };
         let client = reqwest::Client::new();
         let result = HttpWorkerPool::execute_request(&client, &config).await;
@@ -193,6 +201,7 @@ mod tests {
             method: HttpMethod::GET,
             headers: vec![],
             body: String::new(),
+            insecure: false,
         };
         let (result_tx, mut result_rx) = mpsc::unbounded_channel();
         let (_pause_tx, pause_rx) = watch::channel(false);

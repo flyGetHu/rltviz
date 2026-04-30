@@ -1,6 +1,7 @@
 mod app;
 mod config;
 mod control;
+mod curl_import;
 mod engine;
 mod history;
 mod metrics;
