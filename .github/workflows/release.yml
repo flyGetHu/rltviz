@@ -84,14 +84,17 @@ jobs:
       - name: Compute release info
         id: info
         run: |
-          echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-          echo "date=$(date -u +%Y-%m-%d)" >> $GITHUB_OUTPUT
-          echo "tag_name=$(date -u +%Y%m%d-%H%M%S)-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          SHA=$(git rev-parse --short HEAD)
+          DATE=$(date -u +%Y-%m-%d)
+          TAG="build-$(date -u +%Y%m%d-%H%M%S)-${SHA}"
+          echo "sha_short=${SHA}" >> $GITHUB_OUTPUT
+          echo "date=${DATE}" >> $GITHUB_OUTPUT
+          echo "tag_name=${TAG}" >> $GITHUB_OUTPUT
 
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
-          tag: ${{ steps.info.outputs.tag_name }}
+          tag_name: ${{ steps.info.outputs.tag_name }}
           name: Build ${{ steps.info.outputs.date }} (${{ steps.info.outputs.sha_short }})
           body: |
             Build from `master` branch.
